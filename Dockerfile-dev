@@ -1,0 +1,9 @@
+FROM netboxcommunity/netbox:v4.0.2-2.9.1
+COPY netbox-broadcast-plugin /tmp/netbox_broadcast
+
+COPY ./externals_plugins.txt /tmp
+RUN /opt/netbox/venv/bin/pip install --no-warn-script-location -r /tmp/externals_plugins.txt
+
+# Custom install and plugin addition
+# This SECRET_KEY is only used during the installation. There's no need to change it.
+RUN SECRET_KEY='r(m)9nLGnz$(_q3N4z1k(EFsMCjjjzx08x9VhNVcfd%6RF#r!6DE@+V5Zk2X' /opt/netbox/netbox/manage.py collectstatic --no-input
