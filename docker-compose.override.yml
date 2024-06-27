@@ -1,0 +1,37 @@
+x-netbox-common: &common
+    restart: unless-stopped
+    user: "0:0" # root user, without it setup.py develop will not work
+    tty: true
+    env_file:
+      - env/netbox.env
+    volumes:
+      - ./configuration:/etc/netbox/config:z,ro
+      - ./reports:/opt/netbox/netbox/reports:rw
+      - ./scripts:/opt/netbox/netbox/scripts:rw
+      - ../netbox-broadcast-plugin/netbox-broadcast:/opt/netbox/netbox/netbox_broadcast
+      - ../netbox-broadcast-plugin:/tmp/netbox_broadcast
+
+# version: "3.4"
+
+services:
+  netbox:
+    ports:
+     - 8080:8080
+    <<: *common
+    container_name: netbox
+    command: >
+      sh -c "pip install --editable /tmp/netbox_broadcast &&
+      /opt/netbox/venv/bin/python manage.py makemigrations &&
+      /opt/netbox/venv/bin/python manage.py migrate &&
+      /opt/netbox/venv/bin/python manage.py createsuperuser --noinput --username bilbo --email local_admin@admin.com || true &&
+      /opt/netbox/venv/bin/python manage.py runserver 0.0.0.0:8080"
+    environment:
+      - DJANGO_SUPERUSER_PASSWORD=baggins
+
+  netbox-worker:
+    <<: *common
+    container_name: netbox-worker
+
+  netbox-housekeeping:
+    <<: *common
+    container_name: netbox-housekeeping
