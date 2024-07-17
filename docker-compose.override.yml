@@ -8,8 +8,10 @@ x-netbox-common: &common
       - ./configuration:/etc/netbox/config:z,ro
       - ./reports:/opt/netbox/netbox/reports:rw
       - ./scripts:/opt/netbox/netbox/scripts:rw
-      - ../netbox-broadcast-plugin/netbox-broadcast:/opt/netbox/netbox/netbox_broadcast
-      - ../netbox-broadcast-plugin:/tmp/netbox_broadcast
+      - ../netbox-broadcast-plugin/netbox-broadcast/netbox_broadcast:/opt/netbox/netbox/netbox_broadcast
+      - ../netbox-broadcast-plugin/netbox-broadcast:/tmp/netbox_broadcast
+      - ../netbox-broadcast-plugin/netbox-broadcast-dab/netbox_broadcast_dab:/opt/netbox/netbox/netbox_broadcast_dab
+      - ../netbox-broadcast-plugin/netbox-broadcast-dab:/tmp/netbox_broadcast_dab
 
 # version: "3.4"
 
@@ -21,12 +23,14 @@ services:
     container_name: netbox
     command: >
       sh -c "pip install --editable /tmp/netbox_broadcast &&
-      /opt/netbox/venv/bin/python manage.py makemigrations &&
-      /opt/netbox/venv/bin/python manage.py migrate &&
-      /opt/netbox/venv/bin/python manage.py createsuperuser --noinput --username bilbo --email local_admin@admin.com || true &&
-      /opt/netbox/venv/bin/python manage.py runserver 0.0.0.0:8080"
+      pip install --editable /tmp/netbox_broadcast_dab &&
+      python manage.py makemigrations &&
+      python manage.py migrate &&
+      python manage.py createsuperuser --noinput --username bilbo --email local_admin@admin.com || true &&
+      python manage.py runserver 0.0.0.0:8080"
     environment:
       - DJANGO_SUPERUSER_PASSWORD=baggins
+      - DEBUG=true
 
   netbox-worker:
     <<: *common
